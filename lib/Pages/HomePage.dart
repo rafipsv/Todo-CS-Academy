@@ -1,11 +1,39 @@
-// ignore_for_file: file_names
+// ignore_for_file: file_names, unused_local_variable
+
+import 'dart:convert';
 
 import 'package:cs_academy/Pages/AddTodo.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  List<dynamic> todo = [];
+  @override
+  void initState() {
+    super.initState();
+    getTodo();
+  }
+
+  void getTodo() async {
+    String url = "https://api.nstack.in/v1/todos?page=1&limit=10";
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
+      debugPrint(data["items"].toString());
+      for (var alldata in data['items']) {
+        todo.add(alldata);
+      }
+      debugPrint(todo[0]["title"]);
+    } else {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +81,29 @@ class HomePage extends StatelessWidget {
             const SizedBox(
               height: 20,
             ),
-            twoBox()
+            Column(
+              children: List.generate(
+                todo.length,
+                (index) => ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 50),
+                  title: Text(
+                    todo[index]['title'],
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    todo[index]["description"],
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),

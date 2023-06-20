@@ -1,11 +1,9 @@
 // ignore_for_file: file_names, unused_local_variable
 
-import 'dart:convert';
-
 import 'package:cs_academy/Pages/AddTodo.dart';
+import 'package:cs_academy/Services/GetTodo.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,7 +13,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<dynamic> todo = [];
+  List<dynamic> todos = [];
+  bool isLoading = false;
+
   @override
   void initState() {
     super.initState();
@@ -23,90 +23,97 @@ class _HomePageState extends State<HomePage> {
   }
 
   void getTodo() async {
-    String url = "https://api.nstack.in/v1/todos?page=1&limit=10";
-    final response = await http.get(Uri.parse(url));
-    if (response.statusCode == 200) {
-      var data = jsonDecode(response.body);
-      debugPrint(data["items"].toString());
-      for (var alldata in data['items']) {
-        todo.add(alldata);
-      }
-      debugPrint(todo[0]["title"]);
-    } else {}
+    setState(() {
+      isLoading = true;
+    });
+    GetTodo getTodo = GetTodo();
+    todos = await getTodo.getTodo();
+    debugPrint(todos.toString());
+    setState(() {
+      isLoading = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Scaffold(
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) {
-                  return const AddTodo();
-                },
+      child: isLoading
+          ? const Scaffold(
+              backgroundColor: Colors.white,
+              body: Center(
+                child: CircularProgressIndicator(),
               ),
-            );
-          },
-          elevation: 10,
-          backgroundColor: Colors.indigo.shade900,
-          child: const Icon(
-            Icons.add,
-            size: 30,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        body: Column(
-          children: [
-            const SizedBox(height: 23),
-            homeBanner(),
-            const SizedBox(height: 18),
-            searchField(context),
-            const SizedBox(height: 18),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            )
+          : Scaffold(
+              floatingActionButton: FloatingActionButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return const AddTodo();
+                      },
+                    ),
+                  );
+                },
+                elevation: 10,
+                backgroundColor: Colors.indigo.shade900,
+                child: const Icon(
+                  Icons.add,
+                  size: 30,
+                  color: Colors.white,
+                ),
+              ),
+              backgroundColor: Colors.white,
+              body: Column(
                 children: [
-                  customBox("Important"),
-                  customBox("Lecture Notes"),
-                  customBox("Todo List"),
-                  customBox("Shopping"),
+                  const SizedBox(height: 23),
+                  homeBanner(),
+                  const SizedBox(height: 18),
+                  searchField(context),
+                  const SizedBox(height: 18),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 22),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        customBox("Important"),
+                        customBox("Lecture Notes"),
+                        customBox("Todo List"),
+                        customBox("Shopping"),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Column(
+                    children: List.generate(
+                      todos.length,
+                      (index) => ListTile(
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 50),
+                        title: Text(
+                          todos[index]['title'],
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        subtitle: Text(
+                          todos[index]["description"],
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-            const SizedBox(
-              height: 20,
-            ),
-            Column(
-              children: List.generate(
-                todo.length,
-                (index) => ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 50),
-                  title: Text(
-                    todo[index]['title'],
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  subtitle: Text(
-                    todo[index]["description"],
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

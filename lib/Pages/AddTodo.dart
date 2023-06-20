@@ -1,5 +1,6 @@
-// ignore_for_file: file_names
+// ignore_for_file: file_names, use_build_context_synchronously
 
+import 'package:cs_academy/Pages/HomePage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -24,6 +25,10 @@ class AddTodo extends StatelessWidget {
       );
       if (response.statusCode == 201) {
         debugPrint("Todo Posted");
+        Navigator.pushAndRemoveUntil(context,
+            MaterialPageRoute(builder: (context) {
+          return const HomePage();
+        }), (route) => false);
       } else {}
     }
 
